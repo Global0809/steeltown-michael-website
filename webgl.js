@@ -4,6 +4,7 @@
    Fails gracefully: dispatches stm-webgl {ok:false} and the DOM
    fallback (main.js) takes over. */
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 const canvas = document.getElementById("world");
 let renderer;
@@ -36,56 +37,72 @@ scene.add(fill);
 const texLoader = new THREE.TextureLoader();
 const T = p => { const t = texLoader.load(p); t.colorSpace = THREE.SRGBColorSpace; return t; };
 
-/* ---------- 1 · SILK HERO PLANE (displacement shader) ---------- */
-const silkUniforms = {
-  uTex: { value: T("assets/cover.webp") },
-  uTime: { value: 0 },
-  uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-  uMouseStrength: { value: 0 },
-  uDim: { value: 1 },
-};
-const silk = new THREE.Mesh(
-  new THREE.PlaneGeometry(1, 1, 90, 60),
-  new THREE.ShaderMaterial({
-    uniforms: silkUniforms,
-    vertexShader: `
-      uniform float uTime; uniform vec2 uMouse; uniform float uMouseStrength;
-      varying vec2 vUv; varying float vH;
-      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float noise(vec2 p){
-        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
-      }
-      void main(){
-        vUv = uv;
-        float n = noise(uv * 3.0 + vec2(uTime * 0.12, uTime * 0.07));
-        n += 0.5 * noise(uv * 6.0 - vec2(uTime * 0.09, 0.0));
-        float d = distance(uv, uMouse);
-        float ripple = exp(-d * 9.0) * sin(d * 30.0 - uTime * 4.0) * uMouseStrength;
-        vH = n;
-        vec3 pos = position + vec3(0.0, 0.0, n * 0.16 + ripple * 0.12);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-      }`,
-    fragmentShader: `
-      uniform sampler2D uTex; uniform float uDim;
-      varying vec2 vUv; varying float vH;
-      uniform float uTime;
-      void main(){
-        vec3 c = texture2D(uTex, vUv).rgb;
-        c *= 0.82 + vH * 0.35;           /* fake silk shading from height */
-        /* travelling iridescent sheen band */
-        float band = fract(vUv.x * 0.7 - vUv.y * 0.25 + uTime * 0.05);
-        float sheen = smoothstep(0.42, 0.5, band) * (1.0 - smoothstep(0.5, 0.58, band));
-        c += sheen * vec3(1.0, 0.85, 0.95) * 0.22 * (0.5 + vH);
-        gl_FragColor = vec4(c * uDim, 1.0);
-      }`,
-  })
-);
-scene.add(silk);
-function fitSilk() {
-  const d = 4.2, h = 2 * d * Math.tan(THREE.MathUtils.degToRad(27.5)), w = h * camera.aspect;
-  silk.scale.set(Math.max(w * 1.15, 8), Math.max(h * 1.15, 4.6), 1);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+/* ---------- 1 · HERO BOTTLE — procedural glass flacon, morphs pink<->chrome ---------- */
+const bottleGroup = new THREE.Group();
+scene.add(bottleGroup);
+
+const bottleMat = new THREE.MeshPhysicalMaterial({
+  color: 0xff2e94,
+  transmission: 1,
+  thickness: 1.0,
+  ior: 1.45,
+  roughness: 0.05,
+  metalness: 0,
+  clearcoat: 1,
+  clearcoatRoughness: 0.06,
+  attenuationColor: new THREE.Color(0xff007f),
+  attenuationDistance: 3.0,
+  envMapIntensity: 1.4,
+});
+const bBody = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.56, 1.55, 128, 1), bottleMat);
+bBody.position.y = -0.15;
+bottleGroup.add(bBody);
+const bShoulder = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.15, 32, 96), bottleMat);
+bShoulder.rotation.x = Math.PI / 2;
+bShoulder.position.y = 0.66;
+bShoulder.scale.set(1, 1, 0.7);
+bottleGroup.add(bShoulder);
+const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, metalness: 1, roughness: 0.14, envMapIntensity: 1.4 });
+const bCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.2, 64), chromeMat);
+bCollar.position.y = 0.84;
+bottleGroup.add(bCollar);
+const bPedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.74, 0.16, 96), chromeMat);
+bPedestal.position.y = -1.0;
+bottleGroup.add(bPedestal);
+
+// the crown cap — sphere sculpted by interfering curl fields
+const capGeo = new THREE.SphereGeometry(0.42, 96, 96);
+{
+  const pos = capGeo.attributes.position, v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const n = v.clone().normalize();
+    const a = Math.sin(n.x * 31.4) * Math.sin(n.y * 27.2) * Math.sin(n.z * 33.8);
+    const b = Math.sin(n.x * 61.0 + 1.3) * Math.sin(n.y * 57.5 + 2.1) * Math.sin(n.z * 63.2 + 0.7);
+    const r = 0.42 + a * 0.018 + b * 0.014;
+    pos.setXYZ(i, n.x * r, n.y * r, n.z * r);
+  }
+  capGeo.computeVertexNormals();
 }
+const bCapMat = new THREE.MeshStandardMaterial({ color: 0x0c0c0c, metalness: 0.4, roughness: 0.4, envMapIntensity: 0.9 });
+const bCap = new THREE.Mesh(capGeo, bCapMat);
+bCap.position.y = 1.2;
+bCap.scale.set(1, 1.06, 1);
+bottleGroup.add(bCap);
+bottleGroup.position.set(0, 0.05, 0);
+let bottleVis = 1;
+const B_PINK = new THREE.Color(0xff2e94), B_CHROME = new THREE.Color(0xe3e6ec), bCol = new THREE.Color();
+
+// hero lighting rig: key + colored rim so the glass reads against the void
+const bKey = new THREE.PointLight(0xffffff, 30, 14, 1.8);
+bKey.position.set(2.2, 2.6, 3.2);
+scene.add(bKey);
+const bRim = new THREE.PointLight(0xff4fa8, 36, 12, 1.8);
+bRim.position.set(-2.6, 0.6, -2.2);
+scene.add(bRim);
 
 /* ---------- 2 · CORRIDORS OF FLOATING FRAMES ---------- */
 const frameGroup = new THREE.Group();
@@ -93,13 +110,13 @@ scene.add(frameGroup);
 const frames = [];
 const FRAME_DEFS = [
   // pink corridor
-  { img: "assets/pink-full.webp",    x: -1.9, z: -8 },
-  { img: "assets/pink-boxed.webp",   x:  1.9, z: -16 },
-  { img: "assets/pink-capoff.webp",  x: -1.9, z: -24 },
+  { img: "assets/pink-full.webp",    x: -1.9, z: -13 },
+  { img: "assets/pink-boxed.webp",   x:  1.9, z: -21 },
+  { img: "assets/pink-capoff.webp",  x: -1.9, z: -29 },
   // silver corridor
-  { img: "assets/silver-full.webp",  x:  1.9, z: -38 },
-  { img: "assets/silver-boxed.webp", x: -1.9, z: -46 },
-  { img: "assets/silver-capoff.webp",x:  1.9, z: -54 },
+  { img: "assets/silver-full.webp",  x:  1.9, z: -43 },
+  { img: "assets/silver-boxed.webp", x: -1.9, z: -51 },
+  { img: "assets/silver-capoff.webp",x:  1.9, z: -59 },
 ];
 const frameBorder = new THREE.MeshBasicMaterial({ color: 0x191410 });
 FRAME_DEFS.forEach(def => {
@@ -125,6 +142,14 @@ const softTex = (() => {
   x.fillStyle = g; x.fillRect(0, 0, 256, 256);
   return new THREE.CanvasTexture(c);
 })();
+// soft halo behind the hero bottle so it silhouettes against the dark
+const heroGlow = new THREE.Mesh(
+  new THREE.PlaneGeometry(7.4, 7.4),
+  new THREE.MeshBasicMaterial({ map: softTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xff2e94, opacity: 0.45 })
+);
+heroGlow.position.set(0, 0.05, -2.4);
+scene.add(heroGlow);
+
 const frameGlows = [];
 frames.forEach((f, i) => {
   const glow = new THREE.Mesh(
@@ -150,8 +175,8 @@ const beamTex = (() => {
 })();
 const beams = [];
 const BEAM_DEFS = [
-  { x: 1.4, z: -12, tilt: 0.42, c: 0xff9ec6, o: 0.10 }, { x: -1.4, z: -20, tilt: -0.38, c: 0xff9ec6, o: 0.09 }, { x: 1.2, z: -28, tilt: 0.34, c: 0xffc9de, o: 0.08 },
-  { x: -1.4, z: -42, tilt: -0.4, c: 0xd9c9a8, o: 0.09 }, { x: 1.4, z: -50, tilt: 0.36, c: 0xcfd6e2, o: 0.09 },
+  { x: 1.4, z: -17, tilt: 0.42, c: 0xff9ec6, o: 0.10 }, { x: -1.4, z: -25, tilt: -0.38, c: 0xff9ec6, o: 0.09 }, { x: 1.2, z: -33, tilt: 0.34, c: 0xffc9de, o: 0.08 },
+  { x: -1.4, z: -47, tilt: -0.4, c: 0xd9c9a8, o: 0.09 }, { x: 1.4, z: -55, tilt: 0.36, c: 0xcfd6e2, o: 0.09 },
   { x: -2.0, z: -66.5, tilt: -0.5, c: 0xffb9d6, o: 0.16 }, { x: -0.6, z: -66.5, tilt: 0.45, c: 0xfff0dc, o: 0.13 },
 ];
 BEAM_DEFS.forEach(d => {
@@ -483,14 +508,14 @@ function pathAt(y) {
   for (const z of zones) if (y >= z.top - innerHeight * 0.35) { zone = z; t = Math.min(1, Math.max(0, (y - z.top) / (z.end - z.top))); }
   const sway = Math.sin(t * Math.PI * 2) * 0.55;
   vinylParked = 0;
+  bottleVis = 0;
   switch (zone.id) {
-    case "tape-start":   camTarget.set(0, 0, 4.2 - t * 0.6); lookTarget.set(0, 0, 0); break;
-    case "picture-show": camTarget.set(0, -0.15 * t, 3.6 - t * 2.2); lookTarget.set(0, -0.2 * t, 0); silkUniforms.uDim.value = 1 - t * 0.75; break;
+    case "tape-start":   bottleVis = 1; camTarget.set(0, 0.12, 4.9 - t * 0.5); lookTarget.set(0, 0.05, 0); break;
+    case "picture-show": bottleVis = 1 - t; camTarget.set(0, 0.1 - t * 0.3, 4.4 - t * 3.0); lookTarget.set(0, 0.05 - t * 0.1, -t * 3); break;
     case "side-a":       camTarget.set(sway, 0, 1.4 + t * (-30 - 1.4)); lookTarget.set(sway * 0.4, 0, camTarget.z - 7); break;
     case "side-b":       camTarget.set(-sway, 0, -30 + t * -30); lookTarget.set(-sway * 0.4, 0, camTarget.z - 7); break;
     case "turntable":    vinylParked = t; camTarget.set(0, 0, -60 - t * 3.2); lookTarget.lerpVectors(new THREE.Vector3(0, 0, -67), vinylGroup.position, t); break;
   }
-  if (zone.id !== "picture-show") silkUniforms.uDim.value = Math.min(1, silkUniforms.uDim.value + 0.02);
   fogColor.set(FOGS[zone.id]);
   // particle visibility by zone
   petals.material.opacity += (((zone.id === "side-a") ? 0.85 : 0) - petals.material.opacity) * 0.04;
@@ -502,7 +527,6 @@ const mouse = new THREE.Vector2(0, 0);
 let mouseStrengthTarget = 0;
 addEventListener("pointermove", e => {
   mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-  silkUniforms.uMouse.value.set(e.clientX / innerWidth, 1 - e.clientY / innerHeight);
   mouseStrengthTarget = 1;
 });
 
@@ -536,11 +560,37 @@ function tick() {
   const rush = Math.min(1, velS / 60);                 // 0 idle → 1 flying
   const targetFov = 55 + rush * 9;
   if (Math.abs(camera.fov - targetFov) > 0.05) { camera.fov += (targetFov - camera.fov) * 0.1; camera.updateProjectionMatrix(); }
-  silkUniforms.uTime.value = t;
-  silkUniforms.uMouseStrength.value += (mouseStrengthTarget - silkUniforms.uMouseStrength.value) * 0.05;
   mouseStrengthTarget *= 0.985;
 
   pathAt(scrollY);
+
+  // hero bottle: float, slow turn, lean toward the cursor, morph with the edition
+  {
+    const fit = camera.aspect > 1.9 ? 0.85 : camera.aspect < 0.8 ? 0.88 : 1; // squat & narrow screens get a smaller bottle
+    const vis = bottleGroup.scale.x / fit + (bottleVis - bottleGroup.scale.x / fit) * 0.06;
+    bottleGroup.scale.setScalar(Math.max(0.001, vis * fit));
+    bottleGroup.visible = vis > 0.02;
+    if (bottleGroup.visible) {
+      bottleGroup.position.y = 0.05 + Math.sin(t * 0.8) * 0.06;
+      bottleGroup.rotation.y = t * 0.25 + mouse.x * 0.3;
+      bottleGroup.rotation.x = -mouse.y * 0.12;
+      bottleGroup.rotation.z = mouse.x * 0.05;
+      const s = neonUniforms.uSide.value;
+      bottleMat.transmission = 1 - s;
+      bottleMat.metalness = s;
+      bottleMat.roughness = 0.05 + s * 0.06;
+      bottleMat.color.copy(bCol.lerpColors(B_PINK, B_CHROME, s));
+      bottleMat.attenuationColor.copy(bCol);
+      bottleMat.emissive.copy(bCol).multiplyScalar((1 - s) * 0.22 + 0.015);
+      bRim.color.lerpColors(new THREE.Color(0xff4fa8), new THREE.Color(0xcfd8ff), s);
+    }
+    bKey.intensity = 30 * vis;
+    bRim.intensity = 36 * vis;
+    heroGlow.visible = vis > 0.02;
+    heroGlow.material.opacity = (0.4 + Math.sin(t * 1.3) * 0.08) * vis;
+    heroGlow.material.color.lerpColors(new THREE.Color(0xff2e94), new THREE.Color(0xa9b6cc), neonUniforms.uSide.value);
+    heroGlow.scale.setScalar(Math.max(0.001, vis) * (1 + Math.sin(t * 0.9) * 0.03));
+  }
   camera.position.lerp(camTarget, 0.07);
   camera.position.y += Math.sin(t * 0.55) * 0.045;      // idle breathing
   lookCur.lerp(lookTarget, 0.07);
@@ -549,8 +599,10 @@ function tick() {
   scene.fog.color.lerp(fogColor, 0.04);
   renderer.setClearColor(scene.fog.color);
 
-  // frames float, sway, and their halos pulse
+  // frames float, sway, and their halos pulse — and only exist near their corridor
   frames.forEach((f, i) => {
+    f.visible = camera.position.z - f.position.z < 17;
+    if (!f.visible) return;
     f.position.y = f.userData.baseY + Math.sin(t * 0.7 + i * 1.7) * 0.09;
     f.rotation.y = f.userData.baseRotY + Math.sin(t * 0.5 + i * 2.3) * 0.045;
     frameGlows[i].material.opacity = 0.3 + Math.sin(t * 1.3 + i * 1.1) * 0.1;
@@ -684,7 +736,6 @@ function onResize() {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
-  fitSilk();
   measure();
 }
 addEventListener("resize", onResize);
