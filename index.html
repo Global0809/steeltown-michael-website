@@ -1,232 +1,44 @@
 <!DOCTYPE html>
-<html lang="en" data-side="a">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Steeltown Michael — Every Woman's Dream · Eau de Parfum 100ml</title>
-<meta name="description" content="Steeltown Michael — a lost soul record pressed as a perfume. Side A pink, Side B silver. 100ml Eau de Parfum. Flip the record to shop.">
-<meta property="og:title" content="Steeltown Michael — Every Woman's Dream">
-<meta property="og:description" content="A lost soul record, pressed as a perfume. Side A pink · Side B silver · 100ml EDP.">
-<meta property="og:image" content="assets/pink-full.webp">
+<title>STEELTOWN MICHAEL</title>
+<meta name="description" content="STEELTOWN MICHAEL — Eau de Parfum. $199 USD.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@100;200;300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="locked">
 
-<!-- 3D world -->
-<canvas id="world" aria-hidden="true"></canvas>
+<canvas id="scene"></canvas>
 
-<!-- power-on intro overlay -->
-<div id="intro" aria-hidden="true">
-  <div class="scanline"></div>
-  <div class="intro-label">STM · REEL 01 · TRACKING…</div>
+<div id="enter">
+  <h1>STEELTOWN<br>MICHAEL</h1>
+  <span>CLICK TO ENTER</span>
 </div>
 
-<!-- fixed chrome -->
-<div id="grain" aria-hidden="true"></div>
-<div id="cursor" aria-hidden="true"><span class="c-dot"></span><span class="c-label"></span></div>
-<div id="tape-counter" aria-hidden="true"><b class="rec"></b>TAPE&nbsp;<span>00:00</span></div>
-<a id="roundel" href="#tape-start" aria-label="Back to top" data-cursor="TOP">
-  <svg viewBox="0 0 100 100">
-    <defs><path id="rpath" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0"/></defs>
-    <text><textPath href="#rpath">STEELTOWN MICHAEL · EST. 1974 · SIDE A / SIDE B ·&#160;</textPath></text>
-    <circle cx="50" cy="50" r="5" class="rc"/>
-  </svg>
-</a>
-<svg id="tonearm" viewBox="0 0 40 200" aria-hidden="true">
-  <circle cx="20" cy="14" r="9" class="ta-pivot"/>
-  <g id="ta-arm"><line x1="20" y1="14" x2="20" y2="170" class="ta-shaft"/><rect x="15" y="166" width="10" height="22" rx="2" class="ta-head"/></g>
-</svg>
+<header id="brand" class="ui">STEELTOWN MICHAEL</header>
 
-<nav id="nav">
-  <a class="brand" href="#tape-start" data-cursor="TOP">
-    <svg class="crown" viewBox="0 0 40 26"><path d="M4 20 L4 8 L12 14 L20 4 L28 14 L36 8 L36 20 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-    <span>STEELTOWN&nbsp;MICHAEL</span>
-  </a>
-  <button id="now-playing" data-cursor="FLIP">NOW PLAYING · <em>SIDE A — PINK</em></button>
-  <div class="nav-right">
-    <button id="sound-toggle" aria-pressed="true" data-cursor="SOUND">TAPE HISS · <em>ON</em></button>
-    <a class="buy-chip" href="#turntable" data-cursor="SHOP">BUY</a>
-  </div>
-</nav>
+<div id="price" class="ui"><em>EAU DE PARFUM</em>$199 USD</div>
 
-<!-- 01 · TAPE START -->
-<header id="tape-start" class="panel">
-  <img class="hero-img" src="assets/cover.webp" alt="Steeltown Michael — model in magenta silk with the chrome logotype">
-  <video class="hero-ghost" src="assets/hero-loop.mp4" autoplay muted loop playsinline></video>
-  <div class="hero-veil"></div>
-  <div class="hero-copy">
-    <p class="hero-eyebrow mono">EST. 1974 · STEELTOWN RECORDS PRESENTS</p>
-    <svg class="hero-crown" viewBox="0 0 40 26" aria-hidden="true"><path d="M4 20 L4 8 L12 14 L20 4 L28 14 L36 8 L36 20 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-    <h1 class="chrome-text">STEELTOWN<br>MICHAEL</h1>
-    <div class="hero-rule" aria-hidden="true"><i></i><span>◆</span><i></i></div>
-    <p class="hero-sub serif-i">A lost soul record, pressed as a perfume.</p>
-    <p class="tape-meta mono">REEL 01 — EVERY WOMAN'S DREAM — 100 ML — EAU DE PARFUM</p>
-  </div>
-  <div class="scroll-cue mono">SCROLL TO PLAY ▾</div>
-</header>
+<a id="acquire" class="ui" href="https://www.paypal.com/ncp/payment/ZU5K2273WDMPJ" target="_blank" rel="noopener">ACQUIRE THE SCENT</a>
 
-<!-- 02 · THE PICTURE SHOW -->
-<section id="picture-show" class="panel">
-  <h2 class="sec-title glitchable" data-text="THE PICTURE SHOW">THE PICTURE SHOW</h2>
-  <p class="sec-sub serif-i">A lost Motown reel, found.</p>
-  <figure class="tv-frame" data-cursor="PLAY ▸">
-    <video id="film" src="assets/film.mp4" poster="assets/film-poster.jpg" preload="none" playsinline></video>
-    <div class="tv-scanlines"></div>
-    <div class="film-chapter mono" id="film-chapter">PRESS PLAY ON TAPE</div>
-    <button class="film-btn mono" id="film-btn">▸ PRESS PLAY ON TAPE</button>
-    <div class="film-progress"><i id="film-bar"></i></div>
-  </figure>
-</section>
+<div id="credit" class="ui">Digital Architecture by aicanfeel</div>
 
-<div class="marquee" aria-hidden="true">
-  <div class="marquee-track">
-    <span>Every Woman's Dream</span><span>100 ml Eau de Parfum</span><span>Side A · Pink</span><span>Side B · Silver</span><span>Pressed in Steeltown</span><span>Lift the Crown</span>
-  </div>
-</div>
+<div id="cue" class="ui">SCROLL</div>
+<div id="progress" class="ui"><i></i></div>
 
-<!-- 03 · SIDE A — THE FIELD -->
-<section id="side-a" class="panel side-chapter">
-  <header class="chapter-head">
-    <h2 class="sec-title glitchable" data-text="SIDE A — THE FIELD">SIDE A — THE FIELD</h2>
-    <p class="sec-sub serif-i">The romance verse. Cut at golden hour.</p>
-  </header>
-  <div class="verses">
-    <p class="serif-i">She heard him before she saw him.</p>
-    <p class="serif-i">A dream you can hold.</p>
-    <p class="serif-i">Under the crown, the voice.</p>
-  </div>
-  <div class="gallery" id="gallery-a">
-    <div class="frames">
-      <figure class="frame"><img src="assets/pink-full.webp" alt="Pink Steeltown Michael statue bottle in a field of pink flowers at sunset" loading="lazy"><figcaption class="serif-i">She heard him before she saw him.</figcaption></figure>
-      <figure class="frame"><img src="assets/pink-boxed.webp" alt="Pink bottle in its white window box, standing among flowers" loading="lazy"><figcaption class="serif-i">A dream you can hold.</figcaption></figure>
-      <figure class="frame"><img src="assets/pink-capoff.webp" alt="Pink bottle with the afro-head cap lifted, revealing the atomizer" loading="lazy"><figcaption class="serif-i">Under the crown, the voice.</figcaption></figure>
-    </div>
-  </div>
-</section>
-
-<!-- 04 · SIDE B — THE ROCK -->
-<section id="side-b" class="panel side-chapter">
-  <header class="chapter-head">
-    <h2 class="sec-title glitchable" data-text="SIDE B — THE ROCK">SIDE B — THE ROCK</h2>
-    <p class="sec-sub serif-i">The midnight verse. Same record, darker groove.</p>
-  </header>
-  <div class="verses">
-    <p class="serif-i">Midnight cut the same song differently.</p>
-    <p class="serif-i">Forged, not grown.</p>
-    <p class="serif-i">The encore never ends.</p>
-  </div>
-  <div class="gallery reverse" id="gallery-b">
-    <div class="frames">
-      <figure class="frame"><img src="assets/silver-full.webp" alt="Chrome silver Steeltown Michael statue bottle on black volcanic rock" loading="lazy"><figcaption class="serif-i">Midnight cut the same song differently.</figcaption></figure>
-      <figure class="frame"><img src="assets/silver-boxed.webp" alt="Silver bottle in its white window box on dark stone" loading="lazy"><figcaption class="serif-i">Forged, not grown.</figcaption></figure>
-      <figure class="frame"><img src="assets/silver-capoff.webp" alt="Silver bottle with the afro-head cap resting beside the pedestal" loading="lazy"><figcaption class="serif-i">The encore never ends.</figcaption></figure>
-    </div>
-  </div>
-</section>
-
-<!-- 05 · THE TURNTABLE -->
-<section id="turntable" class="panel">
-  <h2 class="sec-title glitchable" data-text="THE TURNTABLE">THE TURNTABLE</h2>
-  <p class="sec-sub serif-i">Flip the record. Choose your side.</p>
-  <div class="deck-grid">
-    <div class="deck">
-      <div class="vinyl-wrap">
-        <div class="vinyl" id="vinyl" data-cursor="FLIP">
-          <div class="vinyl-grooves"></div>
-          <div class="vinyl-label">
-            <img id="vinyl-img" src="assets/pink-boxed.webp" data-a="assets/pink-boxed.webp" data-b="assets/silver-boxed.webp" alt="Current side of the record — the boxed bottle">
-            <span class="spindle"></span>
-          </div>
-        </div>
-      </div>
-      <button class="flip-btn mono" id="flip-btn">⟲ FLIP TO <em>SIDE B — SILVER</em></button>
-      <p class="matrix mono" id="matrix">MATRIX Nº STM-PNK-100</p>
-    </div>
-    <div class="pressing">
-      <h3 class="press-title chrome-text">THE PRESSING</h3>
-      <p class="press-meta mono">PRESSED: 100 ML · EAU DE PARFUM · HI-GLOSS LACQUER<br>CAP MECHANISM: LIFT-OFF CROWN · PEDESTAL: ENGRAVED</p>
-      <ol class="tracklist">
-        <li><details data-sfx><summary><span class="tno mono">A1</span><span class="tname">Pink Pepper</span><span class="tdur mono">0:42</span></summary><p>The opening spark — a bright, flirtatious top note that hits like the first bar of the song.</p></details></li>
-        <li><details data-sfx><summary><span class="tno mono">A2</span><span class="tname">Peach Nectar</span><span class="tdur mono">1:05</span></summary><p>Sun-warmed sweetness, the golden-hour glow of the field, still spinning at the top.</p></details></li>
-        <li><details data-sfx><summary><span class="tno mono">A3</span><span class="tname">Velvet Rose</span><span class="tdur mono">3:12</span></summary><p>The heart of the record — a slow-dance rose, close and warm, worn like satin on skin.</p></details></li>
-        <li><details data-sfx><summary><span class="tno mono">B1</span><span class="tname">Night Jasmine</span><span class="tdur mono">2:58</span></summary><p>The B-side heart: jasmine after dark, heavier in the air, the stage lights dimming.</p></details></li>
-        <li><details data-sfx><summary><span class="tno mono">B2</span><span class="tname">Warm Vanilla</span><span class="tdur mono">4:44</span></summary><p>The base groove — smooth, golden, unhurried. It stays on the skin like an outro.</p></details></li>
-        <li><details data-sfx><summary><span class="tno mono">B3</span><span class="tname">Silver Musk</span><span class="tdur mono">5:21</span></summary><p>The locked groove at the end of the record — clean metallic musk that never quite fades.</p></details></li>
-      </ol>
-      <a class="coupon" id="buy-link" href="https://www.paypal.com/ncp/payment/ZU5K2273WDMPJ" target="_blank" rel="noopener" data-cursor="BUY">
-        <span class="coupon-head mono">— MAIL ORDER —</span>
-        <span class="coupon-main">BUY THE RECORD</span>
-        <span class="coupon-sub mono">100 ML EAU DE PARFUM · VIA PAYPAL · SHIPS WORLDWIDE</span>
-      </a>
-      <p class="coupon-note mono">Secure checkout by PayPal. State your side — PINK or SILVER — in the order note.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 06 · THE B-SIDE REEL -->
-<section id="b-side-reel" class="panel">
-  <h2 class="sec-title glitchable" data-text="THE B-SIDE REEL">THE B-SIDE REEL</h2>
-  <p class="sec-sub serif-i">Reel 02 — recorded at her vanity.</p>
-  <figure class="home-movie" data-cursor="PLAY ▸">
-    <video id="boudoir" src="assets/boudoir.mp4" poster="assets/boudoir-poster.jpg" preload="none" playsinline></video>
-    <div class="tv-scanlines"></div>
-    <button class="film-btn mono" id="boudoir-btn">▸ PLAY REEL 02</button>
-  </figure>
-</section>
-
-<!-- 07 · LINER NOTES -->
-<section id="liner-notes" class="panel">
-  <h2 class="sec-title glitchable" data-text="LINER NOTES">LINER NOTES</h2>
-  <div class="liner-grid">
-    <div class="liner-text serif">
-      <p><span class="dropcap">T</span>hey say every town has one voice it never forgets. In Steeltown, that voice belonged to Michael. He sang the way steel is made — under pressure, glowing, impossible to ignore. When he took the stage, the mills went quiet; when he hit the high note, the whole street leaned in through open windows.</p>
-      <p>This is not a bottle. It is a pressing. One hundred millilitres of the night he sang until sunrise — the flowers thrown on stage, the chrome of the microphone, the warmth of the crowd. Lift the crown from his shoulders and the voice is still in there, waiting for the needle.</p>
-      <p>Two sides were cut that night. <em>Side A</em>, lacquered pink — the romance, the field, the dream. <em>Side B</em>, chrome silver — the midnight, the stone, the encore. Same song. Choose how you play it.</p>
-    </div>
-    <div class="credits mono">
-      <p>VOCALS &amp; COMPOSITION — MICHAEL</p>
-      <p>PRESSED IN — STEELTOWN</p>
-      <p>LACQUER — HI-GLOSS PINK / CHROME</p>
-      <p>RUNTIME — ALL NIGHT</p>
-      <p>CATALOGUE — STM-001</p>
-      <svg class="crown-big" viewBox="0 0 40 26"><path id="crown-path" d="M4 20 L4 8 L12 14 L20 4 L28 14 L36 8 L36 20 Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-    </div>
-  </div>
-</section>
-
-<div class="marquee" aria-hidden="true">
-  <div class="marquee-track">
-    <span>The Encore Never Ends</span><span>Steeltown Michael</span><span>A Lost Soul Record</span><span>Flip the Record</span><span>Every Woman's Dream</span><span>33⅓ · All Night</span>
-  </div>
-</div>
-
-<!-- 08 · THE SLEEVE -->
-<footer id="sleeve" class="panel">
-  <h2 class="sec-title glitchable" data-text="THE SLEEVE">THE SLEEVE</h2>
-  <p class="sec-sub serif-i">Care instructions &amp; catalogue numbers.</p>
-  <div class="sleeve-grid">
-    <div class="faq">
-      <details data-sfx><summary><span class="mono">CAT. 01</span> Shipping &amp; delivery</summary><p>Every record ships worldwide in its white window sleeve, boxed and tracked. Dispatched within 2–3 business days; delivery times vary by country. Tracking is sent to your PayPal email.</p></details>
-      <details data-sfx><summary><span class="mono">CAT. 02</span> Which side will I receive?</summary><p>Both sides are the same eau de parfum — the pressing differs only in lacquer. State PINK or SILVER in the PayPal order note, and that is the side we sleeve for you.</p></details>
-      <details data-sfx><summary><span class="mono">CAT. 03</span> Authenticity &amp; care</summary><p>Each statue is pedestal-engraved and boxed with the crown-M seal. Store upright, away from direct sun. Lift the crown gently — the voice is under it.</p></details>
-      <details data-sfx><summary><span class="mono">CAT. 04</span> Payment &amp; returns</summary><p>Checkout is handled end-to-end by PayPal — cards accepted, buyer protection included. Unopened pressings may be returned within 14 days of delivery; write to the label first.</p></details>
-    </div>
-    <div class="sleeve-side">
-      <div class="barcode" aria-hidden="true"></div>
-      <p class="mono sleeve-cat" id="sleeve-matrix">STM-PNK-100 · SIDE A · 33⅓</p>
-      <a class="write-label mono" href="mailto:aicanfeel@gmail.com?subject=Steeltown%20Michael%20—%20Write%20to%20the%20label" data-cursor="WRITE">✉ WRITE TO THE LABEL</a>
-    </div>
-  </div>
-  <p class="fine mono">© 2026 STEELTOWN MICHAEL · EVERY WOMAN'S DREAM · STORE UPRIGHT · LIFT CROWN GENTLY</p>
-</footer>
+<div id="space"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="main.js"></script>
-<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" } }</script>
-<script type="module" src="webgl.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
