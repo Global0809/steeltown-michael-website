@@ -90,6 +90,8 @@ const Sound = {
   },
 };
 
+window.STMSound = Sound; // the 3D world can trigger SFX too
+
 // unlock audio on first gesture
 const unlock = () => {
   Sound.init();
@@ -212,6 +214,27 @@ document.querySelectorAll(".verses p").forEach(p => {
 
 /* marquees: duplicate content for a seamless -50% loop */
 document.querySelectorAll(".marquee-track").forEach(tr => { tr.innerHTML += tr.innerHTML; });
+
+/* magnetic controls: key buttons glide toward a nearby cursor */
+if (finePointer && !reduced) {
+  const magnets = [...document.querySelectorAll(".buy-chip, .flip-btn, .write-label, .film-btn")];
+  magnets.forEach(m => { m.style.transition = m.style.transition || ""; m.style.willChange = "transform"; });
+  let mgx = -999, mgy = -999;
+  addEventListener("pointermove", e => { mgx = e.clientX; mgy = e.clientY; }, { passive: true });
+  (function magLoop() {
+    magnets.forEach(m => {
+      const r = m.getBoundingClientRect();
+      if (!r.width) return;
+      const dx = mgx - (r.left + r.width / 2), dy = mgy - (r.top + r.height / 2);
+      const d = Math.hypot(dx, dy), R = 120;
+      if (d < R) {
+        const f = (1 - d / R) * 0.32;
+        m.style.transform = `translate(${(dx * f).toFixed(1)}px, ${(dy * f).toFixed(1)}px)`;
+      } else if (m.style.transform) m.style.transform = "";
+    });
+    requestAnimationFrame(magLoop);
+  })();
+}
 
 /* films: 3D tilt toward the cursor (fine pointers) */
 if (finePointer && !reduced) {

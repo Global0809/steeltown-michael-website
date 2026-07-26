@@ -320,6 +320,103 @@ const bokehB = makeParticles(Math.floor(70 * N), dustTex, 0.8, -80, 4, 20);
 bokehA.material.color.set(0xd8b078); bokehA.material.opacity = 0.32;
 bokehB.material.color.set(0xc9a06a); bokehB.material.opacity = 0.16;
 
+/* ---------- 4b · NEBULA BACKDROP — the void becomes color ---------- */
+function blobTex(hex) {
+  const c = document.createElement("canvas"); c.width = c.height = 256;
+  const x = c.getContext("2d");
+  const g = x.createRadialGradient(128, 128, 10, 128, 128, 126);
+  g.addColorStop(0, hex + "cc"); g.addColorStop(0.55, hex + "44"); g.addColorStop(1, hex + "00");
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(c);
+}
+const nebulas = [];
+[
+  { c: "#d44a86", x: -7, y: 2.5, z: -97, s: 40, o: 0.5 },
+  { c: "#6a3f8f", x: 8, y: -2, z: -93, s: 34, o: 0.42 },
+  { c: "#c98f4e", x: 0, y: 1, z: -89, s: 28, o: 0.34 },
+].forEach((d, i) => {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(d.s, d.s * 0.66),
+    new THREE.MeshBasicMaterial({ map: blobTex(d.c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: d.o })
+  );
+  m.position.set(d.x, d.y, d.z);
+  m.userData = { bx: d.x, by: d.y, phase: i * 2.1, o: d.o };
+  scene.add(m); nebulas.push(m);
+});
+
+/* ---------- 4c · CHROME MUSIC NOTES drifting through the world ---------- */
+function noteTex(ch) {
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const x = c.getContext("2d");
+  x.font = "90px Georgia"; x.textAlign = "center"; x.textBaseline = "middle";
+  x.shadowColor = "rgba(255,215,150,0.9)"; x.shadowBlur = 18;
+  const g = x.createLinearGradient(20, 20, 100, 110);
+  g.addColorStop(0, "#fff6e8"); g.addColorStop(0.5, "#d8b078"); g.addColorStop(1, "#9a7a4e");
+  x.fillStyle = g; x.fillText(ch, 64, 68);
+  return new THREE.CanvasTexture(c);
+}
+const noteTexs = [noteTex("♪"), noteTex("♫"), noteTex("♩")];
+const notes = [];
+const NOTE_N = MOBILE ? 7 : 15;
+for (let i = 0; i < NOTE_N; i++) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: noteTexs[i % 3], transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+  const s = 0.25 + Math.random() * 0.3;
+  sp.scale.set(s, s, 1);
+  sp.position.set((Math.random() - 0.5) * 7, (Math.random() - 0.5) * 5, -4 - Math.random() * 56);
+  sp.userData = { vy: 0.12 + Math.random() * 0.2, spin: (Math.random() - 0.5) * 0.6, phase: Math.random() * 6 };
+  scene.add(sp); notes.push(sp);
+}
+
+/* ---------- 4d · GHOST MINI-VINYLS spinning in the distance ---------- */
+const miniVinyls = [];
+[{ x: -5.5, y: 1.6, z: -20 }, { x: 5.8, y: -1.4, z: -33 }, { x: -6, y: -0.8, z: -47 }, { x: 5.4, y: 1.8, z: -57 }].forEach(d => {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.CircleGeometry(1.25, 40), new THREE.MeshBasicMaterial({ color: 0x14101a, transparent: true, opacity: 0.85 })));
+  const gr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: grooveTex, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+  gr.position.z = 0.01; g.add(gr);
+  const rim = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.25, 40), new THREE.MeshBasicMaterial({ color: 0xd8b078, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending }));
+  rim.position.z = 0.02; g.add(rim);
+  g.position.set(d.x, d.y, d.z);
+  g.userData = { spin: 0.15 + Math.random() * 0.2, baseY: d.y, phase: Math.random() * 6 };
+  scene.add(g); miniVinyls.push(g);
+});
+
+/* ---------- 4e · SPARKLE BURSTS on click + shooting streaks ---------- */
+const starTex = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const x = c.getContext("2d");
+  x.translate(32, 32);
+  const g = x.createRadialGradient(0, 0, 0, 0, 0, 30);
+  g.addColorStop(0, "rgba(255,245,225,1)"); g.addColorStop(0.25, "rgba(255,220,170,0.6)"); g.addColorStop(1, "rgba(255,220,170,0)");
+  x.fillStyle = g;
+  x.beginPath();
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, r = i % 2 ? 6 : 30; x.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+  x.closePath(); x.fill();
+  return new THREE.CanvasTexture(c);
+})();
+const sparks = [];
+const sparkPool = Array.from({ length: MOBILE ? 14 : 30 }, () => {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+  sp.visible = false; scene.add(sp); return sp;
+});
+function burstAt(point) {
+  let used = 0;
+  for (const sp of sparkPool) {
+    if (sp.visible) continue;
+    if (used++ >= 12) break;
+    sp.visible = true; sp.position.copy(point);
+    const s = 0.08 + Math.random() * 0.16; sp.scale.set(s, s, 1);
+    sparks.push({ sp, vx: (Math.random() - 0.5) * 1.6, vy: (Math.random() - 0.2) * 1.6, vz: (Math.random() - 0.5) * 0.8, life: 1 });
+  }
+}
+const streak = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe6c9 }));
+streak.scale.set(3.2, 0.06, 1); scene.add(streak);
+let streakT = 4, streakLife = 0;
+
+/* cursor light — your pointer literally lights the world */
+const cursorLight = new THREE.PointLight(0xffe4ef, MOBILE ? 0 : 5, 8, 1.6);
+scene.add(cursorLight);
+
 /* ---------- 5 · CAMERA PATH (scroll-driven flight) ---------- */
 const secs = {};
 ["tape-start", "picture-show", "side-a", "side-b", "turntable"].forEach(id => (secs[id] = document.getElementById(id)));
@@ -372,14 +469,29 @@ const curEl = document.getElementById("cursor");
 let hoverVinyl = false;
 addEventListener("click", e => {
   if (hoverVinyl) document.getElementById("flip-btn").click();
+  // sparkle burst wherever you click in the world
+  if (!e.target.closest("a, button, summary, .marquee, video, input")) {
+    ray.setFromCamera(mouse, camera);
+    burstAt(camera.position.clone().addScaledVector(ray.ray.direction, 3.4));
+    if (window.STMSound) window.STMSound.tick();
+  }
 });
 
 /* ---------- render loop ---------- */
 const clock = new THREE.Clock();
+let lastY = 0, velS = 0, hoveredFrame = -1;
 function tick() {
   requestAnimationFrame(tick);
   if (document.hidden) return;
   const t = clock.getElapsedTime();
+  const dt = Math.min(clock.getDelta ? 0.016 : 0.016, 0.05);
+
+  // scroll velocity → the world reacts to how hard you scroll
+  const vel = Math.abs(scrollY - lastY); lastY = scrollY;
+  velS += (vel - velS) * 0.08;
+  const rush = Math.min(1, velS / 60);                 // 0 idle → 1 flying
+  const targetFov = 55 + rush * 9;
+  if (Math.abs(camera.fov - targetFov) > 0.05) { camera.fov += (targetFov - camera.fov) * 0.1; camera.updateProjectionMatrix(); }
   silkUniforms.uTime.value = t;
   silkUniforms.uMouseStrength.value += (mouseStrengthTarget - silkUniforms.uMouseStrength.value) * 0.05;
   mouseStrengthTarget *= 0.985;
@@ -414,6 +526,58 @@ function tick() {
   bokehA.material.opacity = 0.3 + Math.sin(t * 0.9) * 0.1;
   bokehB.material.opacity = 0.15 + Math.sin(t * 0.7 + 2) * 0.06;
 
+  // nebula backdrop breathes and drifts
+  nebulas.forEach(n => {
+    n.position.x = n.userData.bx + Math.sin(t * 0.05 + n.userData.phase) * 2.4;
+    n.position.y = n.userData.by + Math.cos(t * 0.04 + n.userData.phase) * 1.2;
+    n.material.opacity = n.userData.o * (0.85 + Math.sin(t * 0.3 + n.userData.phase) * 0.15);
+  });
+
+  // chrome notes rise, spin, shimmer
+  notes.forEach(nt => {
+    nt.position.y += nt.userData.vy * 0.016 * (1 + rush * 1.5);
+    nt.material.rotation += nt.userData.spin * 0.016;
+    nt.material.opacity = 0.4 + Math.sin(t * 1.4 + nt.userData.phase) * 0.22;
+    if (nt.position.y > 3.4) nt.position.y = -3.4;
+  });
+
+  // ghost mini-vinyls spin in the distance
+  miniVinyls.forEach(v => {
+    v.rotation.z += v.userData.spin * 0.016;
+    v.position.y = v.userData.baseY + Math.sin(t * 0.5 + v.userData.phase) * 0.25;
+  });
+
+  // click sparkles
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.life -= 0.022;
+    s.sp.position.x += s.vx * 0.016; s.sp.position.y += s.vy * 0.016; s.sp.position.z += s.vz * 0.016;
+    s.vy -= 0.03;
+    s.sp.material.opacity = Math.max(0, s.life);
+    if (s.life <= 0) { s.sp.visible = false; s.sp.material.opacity = 0; sparks.splice(i, 1); }
+  }
+
+  // occasional shooting streak deep in the background
+  streakT -= 0.016;
+  if (streakT <= 0 && streakLife <= 0) {
+    streakLife = 1;
+    streak.position.set(-14, 1 + Math.random() * 3, -74 - Math.random() * 12);
+    streakT = 5 + Math.random() * 6;
+  }
+  if (streakLife > 0) {
+    streakLife -= 0.014;
+    streak.position.x += 0.42;
+    streak.material.opacity = Math.sin(Math.max(0, streakLife) * Math.PI) * 0.7;
+    if (streakLife <= 0) streak.material.opacity = 0;
+  }
+
+  // pointer light hovers just in front of the camera, at the cursor
+  if (!MOBILE) {
+    ray.setFromCamera(mouse, camera);
+    cursorLight.position.copy(camera.position).addScaledVector(ray.ray.direction, 3.2);
+    cursorLight.intensity = 4 + Math.sin(t * 2.2) * 1 + rush * 4;
+  }
+
   // vinyl: spin + flip + float
   spin += 0.012;
   disc.rotation.y = spin;                       // cylinder local Y = facing axis
@@ -426,11 +590,12 @@ function tick() {
   halo.position.set(vinylGroup.position.x, vinylGroup.position.y, VINYL_Z - 0.9);
   halo.scale.setScalar(vs * (1 + Math.sin(t * 1.6) * 0.04));
 
-  // particles drift
+  // particles drift (scroll rush makes the weather blow harder)
+  const drive = 1 + rush * 2.2;
   [[petals, -0.28, 0.4], [embers, 0.22, 0.25], [dust, -0.03, 0.06]].forEach(([p, vy, wob]) => {
     const a = p.geometry.attributes.position.array, s = p.userData.seed;
     for (let i = 0; i < s.length; i++) {
-      a[i * 3 + 1] += vy * 0.016 * (0.6 + Math.sin(s[i]) * 0.4);
+      a[i * 3 + 1] += vy * 0.016 * drive * (0.6 + Math.sin(s[i]) * 0.4);
       a[i * 3] += Math.sin(t * 0.8 + s[i]) * wob * 0.008;
       if (vy < 0 && a[i * 3 + 1] < -2.8) a[i * 3 + 1] = 2.8;
       if (vy > 0 && a[i * 3 + 1] > 2.8) a[i * 3 + 1] = -2.8;
@@ -451,7 +616,16 @@ function tick() {
       }
       document.body.style.cursor = ""; // custom cursor handles visuals
     }
+    // frame hover: the picture you look at leans in and glows brighter
+    const fh = ray.intersectObjects(frames, true);
+    hoveredFrame = fh.length ? frames.findIndex(f => f === fh[0].object.parent) : -1;
   }
+  frames.forEach((f, i) => {
+    const target = i === hoveredFrame ? 1.06 : 1;
+    f.scale.x += (target - f.scale.x) * 0.12;
+    f.scale.y = f.scale.z = f.scale.x;
+    if (i === hoveredFrame) frameGlows[i].material.opacity = Math.min(0.55, frameGlows[i].material.opacity + 0.02);
+  });
 
   renderer.render(scene, camera);
 }
