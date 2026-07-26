@@ -417,6 +417,50 @@ let streakT = 4, streakLife = 0;
 const cursorLight = new THREE.PointLight(0xffe4ef, MOBILE ? 0 : 5, 8, 1.6);
 scene.add(cursorLight);
 
+/* ---------- 4f · NEON BACKDROP — electric waves that ride your scroll ---------- */
+scene.add(camera); // so the backdrop can live on the camera
+const neonUniforms = {
+  uTime: { value: 0 },
+  uP: { value: 0 },     // overall scroll progress 0..1
+  uVel: { value: 0 },   // scroll rush 0..1
+  uSide: { value: 0 },  // 0 pink · 1 silver
+};
+const neon = new THREE.Mesh(
+  new THREE.PlaneGeometry(120, 64),
+  new THREE.ShaderMaterial({
+    uniforms: neonUniforms,
+    depthWrite: false,
+    depthTest: false,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform float uTime, uP, uVel, uSide;
+      varying vec2 vUv;
+      void main(){
+        vec2 uv = vUv - 0.5;
+        vec3 col = mix(vec3(0.028, 0.008, 0.030), vec3(0.010, 0.012, 0.022), uSide);
+        vec3 acc = vec3(0.0);
+        for (int i = 0; i < 4; i++) {
+          float fi = float(i);
+          float y = sin(uv.x * (2.2 + fi * 1.35) + uTime * (0.16 + fi * 0.06) + uP * 14.0 + fi * 1.9) * 0.20
+                  + sin(uv.x * 7.5 - uTime * 0.28 + fi * 2.3) * 0.045
+                  + (fi - 1.5) * 0.17 + (uP - 0.5) * 0.55;
+          float d = abs(uv.y - y);
+          float g = (0.0035 + uVel * 0.009) / max(d, 0.0025);
+          vec3 cPink = mix(vec3(1.0, 0.06, 0.55), vec3(0.55, 0.22, 1.0), fract(fi * 0.37 + uP * 0.8));
+          vec3 cSilv = mix(vec3(0.62, 0.78, 1.0), vec3(0.92, 0.95, 1.0), fract(fi * 0.41));
+          acc += g * mix(cPink, cSilv, uSide);
+        }
+        col += acc * (0.34 + uVel * 0.85);
+        col = 1.0 - exp(-col * 1.25);              /* soft roll-off, no blowout */
+        col *= 1.0 - dot(uv, uv) * 0.95;           /* vignette */
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  })
+);
+neon.renderOrder = -999;
+neon.position.set(0, 0, -34);
+camera.add(neon);
+
 /* ---------- 5 · CAMERA PATH (scroll-driven flight) ---------- */
 const secs = {};
 ["tape-start", "picture-show", "side-a", "side-b", "turntable"].forEach(id => (secs[id] = document.getElementById(id)));
@@ -525,6 +569,12 @@ function tick() {
   // bokeh twinkle
   bokehA.material.opacity = 0.3 + Math.sin(t * 0.9) * 0.1;
   bokehB.material.opacity = 0.15 + Math.sin(t * 0.7 + 2) * 0.06;
+
+  // neon backdrop rides the scroll
+  neonUniforms.uTime.value = t;
+  neonUniforms.uP.value = scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  neonUniforms.uVel.value += (rush - neonUniforms.uVel.value) * 0.08;
+  neonUniforms.uSide.value += ((document.documentElement.dataset.side === "b" ? 1 : 0) - neonUniforms.uSide.value) * 0.03;
 
   // nebula backdrop breathes and drifts
   nebulas.forEach(n => {

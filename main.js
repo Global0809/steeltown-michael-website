@@ -134,8 +134,8 @@ const vinylImg = document.getElementById("vinyl-img");
 const matrixEl = document.getElementById("matrix");
 const sleeveMatrix = document.getElementById("sleeve-matrix");
 const SIDES = {
-  a: { np: "SIDE A — PINK", flip: "SIDE B — SILVER", matrix: "STM-PNK-100", sleeve: "STM-PNK-100 · SIDE A · 33⅓" },
-  b: { np: "SIDE B — SILVER", flip: "SIDE A — PINK", matrix: "STM-SLV-100", sleeve: "STM-SLV-100 · SIDE B · 33⅓" },
+  a: { np: "PINK", flip: "SILVER", matrix: "STM-PNK-100", sleeve: "STM-PNK-100 · PINK · 100 ML" },
+  b: { np: "SILVER", flip: "PINK", matrix: "STM-SLV-100", sleeve: "STM-SLV-100 · SILVER · 100 ML" },
 };
 let side = "a", flipping = false;
 
@@ -144,9 +144,9 @@ function applySide(s) {
   side = s;
   html.dataset.side = s;
   vinylImg.src = vinylImg.dataset[s];
-  npBtn.innerHTML = `NOW PLAYING · <em>${SIDES[s].np}</em>${EQ_HTML}`;
-  flipBtn.innerHTML = `⟲ FLIP TO <em>${SIDES[s].flip}</em>`;
-  matrixEl.textContent = `MATRIX Nº ${SIDES[s].matrix}`;
+  npBtn.innerHTML = `EDITION · <em>${SIDES[s].np}</em>${EQ_HTML}`;
+  flipBtn.innerHTML = `⟲ SWITCH TO <em>${SIDES[s].flip}</em>`;
+  matrixEl.textContent = `EDITION ${SIDES[s].matrix}`;
   sleeveMatrix.textContent = SIDES[s].sleeve;
   try { localStorage.setItem("stm-side", s); } catch {}
   history.replaceState(null, "", "#side-" + s);
@@ -178,7 +178,20 @@ npBtn.addEventListener("click", () => document.getElementById("turntable").scrol
 // restore side from hash or storage (no animation)
 const initSide = location.hash === "#side-b" ? "b" : location.hash === "#side-a" ? "a" : (() => { try { return localStorage.getItem("stm-side") || "a"; } catch { return "a"; } })();
 if (initSide !== "a") applySide(initSide);
-else npBtn.innerHTML = `NOW PLAYING · <em>${SIDES.a.np}</em>${EQ_HTML}`;
+else npBtn.innerHTML = `EDITION · <em>${SIDES.a.np}</em>${EQ_HTML}`;
+
+/* reactive liquid glass: all glass type follows the pointer */
+if (finePointer && !reduced) {
+  let glassRaf = false;
+  addEventListener("pointermove", e => {
+    if (glassRaf) return; glassRaf = true;
+    requestAnimationFrame(() => {
+      document.documentElement.style.setProperty("--shx", ((e.clientX / innerWidth) * 100).toFixed(1) + "%");
+      document.documentElement.style.setProperty("--shy", ((e.clientY / innerHeight) * 100).toFixed(1) + "%");
+      glassRaf = false;
+    });
+  }, { passive: true });
+}
 
 /* ============ KINETIC TYPE — split headings into rising chars ============ */
 function splitChars(el, stagger = 0.028) {
